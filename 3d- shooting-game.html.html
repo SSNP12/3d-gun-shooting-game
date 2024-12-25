@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8>
+     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>3D Shooting Game</title>
+<style>
+   body{
+      margin:0;
+      overflow:hidden;
+}
+   canvas{
+display:block;
+}
+</style>
+</head>
+   <script
+src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"><
+/script>
+     <script>
+         // Set up the seen,camera,and renderer
+         const scene= new THREE.scene();
+         const camera= new THREE.PerspectiveCamera(75,window.innerWidth /
+window.innerHeight, 0.1, 1000);
+         const renderer= new THREE.WebGLRenderer();
+         renderer.setSize(window.innerWidth, window.innerHeight);
+         document.body.appendChild(renderer.domElement);
+
+         //Player and controls
+         const player= new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new
+THREE.MeshBasicMaterial({color: 0x00ff00}))
+         player.position.z=5;
+         scene.add(player);
+
+         //Bullets and enemies
+         const bullets=[];
+         const enemies=[];
+         const enemyspeed=0.02;
+         
+         //lightning
+         const light= new THREE.DirectionalLight(0xffffff,1);
+         light.position.set(0,1,1).normalize();
+         scene.add(light)
+
+         //Spawn enemies
+         function spawnEnemy() {
+             const enemy= new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new
+THREE.MeshBasicMaterial({color:0xff0000}));
+            enemy.position.set(Math.random()* 10-5, Math.random()*10-5,-10);
+           enemies.push(enemy);
+           scene.add(enemy);
+}
+  setInterval(spawnEnemy, 2000);
+
+  //player controls
+  const keys={};
+ window.addEventListener('keydown', (e) => keys [e.key] =true);
+window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+ // Update player position and shoot bullets
+ function updatePlayer(){
+     if (keys['ArrowUp'])player.position.y += 0.1;
+     if (keys['ArrowDown']) player.position.y -= 0.1;
+     if (keys['ArrowLeft']) player.position.x -= 0.1;
+     if (keys['ArrowRight']) player.position.x += 0.1;}
+
+     // Shoot bullet
+     if(keys[' ']){
+        const bullet= new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),
+new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+        bullet.position.set(player.position.x, player.posion.y,player.position.z - 0.5);
+       bullets.push(bullet);
+       scene.add(bullet);
+       keys[' '] = false; // Prevent holding the space bar for continuous shooting
+  }
+}
+
+  // Update bullets and enemies
+  function updateBullets() {
+     bullets.forEach((bullet, index) => {
+        bullet.position.z -= 0.2;
+
+  // Remove bullets that go off-screan
+  if (bullet.position.z < -10) {
+      scene.remove(bullet);
+      bullets.splice(index, 1);
+}
+});
+}
+  function updateEnemies() {
+   enemies.forEach((enemy, index) => {
+    enemy.position.z += enemySpeed;
+
+  // Remove enemies that reach the player 
+ if(enemy.position.z > player.position.z) {
+    scene.remove(enemy);
+    enemies.splice(index,1);
+    console.log('Enemy reached the player!');
+}
+
+ // Check for collisions with bullets
+  bullets.forEach((bullet, bulletIndex) => {
+if(
+Math.abs(bullet.position.x - enemy.position.x) < 0.5
+&&
+Math.abs(bullet.position.y - enemy.position.y) < 0.5
+&&
+Math.abs(bullet.position.z - enemy.position.z) < 0.5
+){
+  // Remove both enemy and bullet
+   scene.remove(enemy);
+   scene.remove(bullet);
+   enemies.splice(index, 1);
+   bullets.splice(bulletIndex, 1);
+ }
+});
+});
+}
+
+  // Game loop
+  function animate() {
+     requestAnimationFrame(animate);
+
+     updatePlayer();
+     updateBullets();
+     updateEnemies();
+    
+     renderer.render(scene, camera);
+}
+ animate();
+</script>
+</body>
+</html>
+   
+    
+
